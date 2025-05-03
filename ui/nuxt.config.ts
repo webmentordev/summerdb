@@ -3,16 +3,19 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
-  ssr: false,
+  ssr: true,
   css: ['~/assets/css/tailwind.css'],
+
   runtimeConfig: {
     api: process.env.NUXT_API_URL
   },
+
   vite: {
     plugins: [
       tailwindcss(),
     ],
   },
+
   app: {
     head: {
       title: "SummerDB",
@@ -24,5 +27,7 @@ export default defineNuxtConfig({
         { rel: 'icon', href: '/summerdb-1.png' }
       ],
     }
-  }
+  },
+
+  modules: ['@nuxt/icon']
 })

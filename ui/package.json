@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/icon": "^1.12.0",
     "@tailwindcss/vite": "^4.1.5",
     "nuxt": "^3.17.1",
     "tailwindcss": "^4.1.5",

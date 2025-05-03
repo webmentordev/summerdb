@@ -1,15 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cal+Sans&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Moderustic:wght@300..800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 @import "tailwindcss";
 
-* {
-    font-family: "Space Mono", monospace;
+
+@theme {
+    --color-dark: #11191D;
+    --color-primary: #F5F2EC;
+    --color-success: #A6EFB2;
+    --color-success-dark: #4F8965;
 }
 
-.link {
-    @apply mb-2 py-1 px-4 text-white bg-white/10 border border-white/10 rounded-md text-center;
+* {
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    @apply bg-dark
+}
+
+h1, h2, h3, h4, h5, strong, button {
+    @apply font-bold;
 }
 
 .router-link-active,
 .router-link-exact-active {
-    @apply border-blue-500;
+    @apply text-dark bg-primary;
 }

@@ -14,7 +14,8 @@ Return u_id with users data
 Fetch single User API
 Using UUID
 Move Code in Libs
-Fix Bug on new setup where users table does not exist
+[Fixed] Fix Bug on new setup where users table does not exist
+[Done] Initial Create Users database
 ```
 
 -------------

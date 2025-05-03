@@ -28,6 +28,7 @@ struct ApiResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    setup().await.unwrap();
     println!("Server is running at: http://127.0.0.1:8080");
     HttpServer::new(|| {
         App::new().service(index).service(

@@ -1,7 +1,11 @@
 <template>
-    <nuxt-link :to="link" class="px-3 rounded-xl py-3 pl-4 flex items-center text-slate-200 mb-3">
+    <nuxt-link :to="link"
+        class="p-3 rounded-xl flex items-center border border-white/10 w-fit text-slate-200 mb-3 relative group">
         <Icon :name="icon" class="text-2xl" />
-        <span class="ml-3 font-medium text-md">{{ text }}</span>
+        <span
+            class="bg-black absolute text-white max-w-[200px] min-w-full p-1 px-2 rounded-lg left-[55px] text-sm hidden group-hover:block">{{
+                text
+            }}</span>
     </nuxt-link>
 </template>
 

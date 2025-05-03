@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @import "tailwindcss";
-
+@import "@nuxt/ui";
 
 @theme {
     --color-dark: #11191D;
@@ -15,12 +15,22 @@
 }
 
 body {
-    @apply bg-dark
+    @apply bg-dark text-dark;
 }
 
-h1, h2, h3, h4, h5, strong, button {
+h1,
+h2,
+h3,
+h4,
+h5,
+strong {
     @apply font-bold;
 }
+
+button {
+    @apply cursor-pointer;
+}
+
 
 .router-link-active,
 .router-link-exact-active {

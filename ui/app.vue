@@ -1,5 +1,6 @@
 <template>
   <main class="h-screen overflow-hidden">
+    <UApp>
     <NuxtLoadingIndicator />
     <section class="flex h-full w-full p-2">
       <AppNavbar />
@@ -7,5 +8,6 @@
         <NuxtPage />
       </div>
     </section>
+  </UApp>
   </main>
 </template>

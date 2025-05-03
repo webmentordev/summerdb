@@ -2,10 +2,10 @@
     <section>
         <form @submit.prevent="store" method="POST">
             <div v-if="user" class="max-w-[400px] w-full m-auto mt-6">
-                <Input v-model="name" placeholder="User Name" required />
-                <Input v-model="age" placeholder="Age" required />
-                <Input v-model="street" placeholder="Address" required />
-                <Input v-model="postal_code" placeholder="Postal Code" required />
+                <FormInput v-model="name" placeholder="User Name" required />
+                <FormInput v-model="age" placeholder="Age" required />
+                <FormInput v-model="street" placeholder="Address" required />
+                <FormInput v-model="postal_code" placeholder="Postal Code" required />
                 <button type="submit" class="py-2 px-3 rounded-md bg-black text-white">Create</button>
             </div>
         </form>
@@ -35,6 +35,15 @@ async function store() {
             postal_code: postal_code.value,
         }
     });
+    reset();
     console.log(data);
+}
+
+
+function reset() {
+    name.value = ""
+    age.value = ""
+    street.value = ""
+    postal_code.value = ""
 }
 </script>

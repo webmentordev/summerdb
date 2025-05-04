@@ -16,6 +16,9 @@ Using UUID
 Move Code in Libs
 [Fixed] Fix Bug on new setup where users table does not exist
 [Done] Initial Create Users database
+[Done] Super user database with password encryption
+Use Password verification
+Update Response to JSON responses
 ```
 
 -------------

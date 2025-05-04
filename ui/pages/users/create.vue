@@ -2,10 +2,9 @@
     <section>
         <form @submit.prevent="store" method="POST">
             <div v-if="user" class="max-w-[400px] w-full m-auto mt-6">
-                <FormInput v-model="name" placeholder="User Name" required />
-                <FormInput v-model="age" placeholder="Age" required />
-                <FormInput v-model="street" placeholder="Address" required />
-                <FormInput v-model="postal_code" placeholder="Postal Code" required />
+                <FormInput type="text" v-model="name" placeholder="Name" required />
+                <FormInput type="email" v-model="email" placeholder="Email" required />
+                <FormInput type="password" v-model="password" placeholder="Password" required />
                 <button type="submit" class="py-2 px-3 rounded-md bg-black text-white">Create</button>
             </div>
         </form>
@@ -16,9 +15,8 @@
 const user = ref(null);
 
 const name = ref('');
-const age = ref('');
-const street = ref('');
-const postal_code = ref('');
+const email = ref('');
+const password = ref('');
 
 
 const { data } = await useFetch('/api/users');
@@ -30,9 +28,8 @@ async function store() {
         method: "POST",
         body: {
             name: name.value,
-            age: age.value,
-            street: street.value,
-            postal_code: postal_code.value,
+            email: email.value,
+            password: password.value
         }
     });
     reset();
@@ -41,9 +38,8 @@ async function store() {
 
 
 function reset() {
-    name.value = ""
-    age.value = ""
-    street.value = ""
-    postal_code.value = ""
+    name.value = "";
+    email.value = "";
+    password.value = "";
 }
 </script>

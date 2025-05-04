@@ -7,16 +7,52 @@
             </div>
         </div>
         <SideBar v-model="isSidebarOpen">
-            <FormInput placeholder="Collection Name" />
+            <FormInput v-model="title" placeholder="Collection title" />
             <div class="py-3 border-t border-gray-200">
                 <FormButton text="+ New Column" class="w-full" />
             </div>
+            <FormButton text="Create" @click="store" />
         </SideBar>
     </section>
 </template>
 
 <script setup>
-const items = ref(['Backlog', 'Todo', 'In Progress', 'Done']);
-const value = ref('Backlog');
-const isSidebarOpen = ref(true)
+const isSidebarOpen = ref(true);
+
+const title = ref("");
+
+const fields = ref([
+    {
+        title: "title",
+        type: "VARCHAR",
+        max: 255,
+    },
+    {
+        title: "content",
+        type: "TEXT"
+    },
+    {
+        title: "is_active",
+        type: "BOOLEAN"
+    }
+]);
+
+
+async function store() {
+    const data = await $fetch('/api/create/collection', {
+        method: "POST",
+        body: {
+            "collection": title.value,
+            "fields": fields.value
+        }
+    });
+    reset();
+    console.log(data);
+}
+
+
+function reset() {
+
+}
+
 </script>

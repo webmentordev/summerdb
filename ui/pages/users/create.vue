@@ -24,16 +24,20 @@ user.value = data.value;
 
 
 async function store() {
-    const data = await $fetch('/api/create/user', {
-        method: "POST",
-        body: {
-            name: name.value,
-            email: email.value,
-            password: password.value
-        }
-    });
-    reset();
-    console.log(data);
+    try {
+        const data = await $fetch('/api/create/user', {
+            method: "POST",
+            body: {
+                name: name.value,
+                email: email.value,
+                password: password.value
+            }
+        });
+        reset();
+        console.log(data);
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 

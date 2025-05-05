@@ -27,7 +27,7 @@ struct Version {
 #[derive(Serialize)]
 struct ApiResponse {
     message: String,
-    status: u8,
+    status: u32,
 }
 
 #[actix_web::main]
@@ -182,15 +182,27 @@ struct CollectionFields {
     title: String,
     #[serde(rename = "type")]
     field_type: String,
-    #[serde(default)]
+    unique: bool,
+    nullable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    min: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     max: Option<u32>,
 }
 
-async fn create_collection(_data: web::Json<CollectionRequest>) -> Result<impl Responder> {
-    // println!("{:#?}", &data);
-    let result = ApiResponse {
-        message: "Collection has been created!".to_string(),
+async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Responder> {
+    let db_name = format!("databases/{}.db", data.collection);
+    if Path::new(&db_name).exists() {
+        return Ok(HttpResponse::BadRequest().json(ApiResponse {
+            message: format!("Collection {} already exists!", &data.collection),
+            status: 409,
+        }));
+    }
+
+    let conn = Connection::open(&db_name).unwrap();
+
+    Ok(HttpResponse::Ok().json(ApiResponse {
+        message: format!("Collection {} has been created!", &data.collection),
         status: 201,
-    };
-    Ok(web::Json(result))
+    }))
 }

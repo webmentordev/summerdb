@@ -203,6 +203,7 @@ async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Re
             status: 409,
         }));
     }
+
     let conn = match Connection::open(&db_name) {
         Ok(conn) => conn,
         Err(err) => {
@@ -216,18 +217,22 @@ async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Re
         "CREATE TABLE {} (id INTEGER PRIMARY KEY AUTOINCREMENT",
         data.collection
     );
+
     for field in &data.fields {
         let mut field_def = format!(
             ", {} {}",
             field.title,
             sql_type_from_field_type(&field.field_type)
         );
+
         if !field.nullable {
             field_def.push_str(" NOT NULL");
         }
+
         if field.unique {
             field_def.push_str(" UNIQUE");
         }
+
         if let Some(min) = field.min {
             if field.field_type == "VARCHAR" || field.field_type == "TEXT" {
                 field_def.push_str(&format!(" CHECK(length({}) >= {})", field.title, min));
@@ -235,6 +240,7 @@ async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Re
                 field_def.push_str(&format!(" CHECK({} >= {})", field.title, min));
             }
         }
+
         if let Some(max) = field.max {
             if field.field_type == "VARCHAR" || field.field_type == "TEXT" {
                 field_def.push_str(&format!(" CHECK(length({}) <= {})", field.title, max));
@@ -242,15 +248,19 @@ async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Re
                 field_def.push_str(&format!(" CHECK({} <= {})", field.title, max));
             }
         }
+
         create_table_sql.push_str(&field_def);
     }
+
     create_table_sql.push_str(")");
+
     if let Err(err) = conn.execute(&create_table_sql, []) {
         return Ok(HttpResponse::InternalServerError().json(ApiResponse {
             message: format!("Failed to create table: {}", err),
             status: 500,
         }));
     }
+
     let metadata_table = format!("{}_metadata", data.collection);
     let create_metadata_sql = format!(
         "CREATE TABLE {} (
@@ -263,12 +273,14 @@ async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Re
         )",
         metadata_table
     );
+
     if let Err(err) = conn.execute(&create_metadata_sql, []) {
         return Ok(HttpResponse::InternalServerError().json(ApiResponse {
             message: format!("Failed to create metadata table: {}", err),
             status: 500,
         }));
     }
+
     for field in &data.fields {
         let insert_metadata_sql = format!(
             "INSERT INTO {} (field_name, field_type, unique_field, nullable, min, max) 
@@ -293,22 +305,40 @@ async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Re
             }));
         }
     }
+
     Ok(HttpResponse::Ok().json(ApiResponse {
         message: format!("Collection {} has been created!", &data.collection),
         status: 201,
     }))
 }
 
-// Helper function to convert field types to SQLite types
 fn sql_type_from_field_type(field_type: &str) -> &str {
     match field_type {
         "VARCHAR" => "TEXT",
         "TEXT" => "TEXT",
+        "CHAR" => "TEXT",
+        "CLOB" => "TEXT",
+        "STRING" => "TEXT",
         "INTEGER" => "INTEGER",
+        "INT" => "INTEGER",
+        "SMALLINT" => "INTEGER",
+        "BIGINT" => "INTEGER",
+        "TINYINT" => "INTEGER",
+        "MEDIUMINT" => "INTEGER",
         "FLOAT" => "REAL",
-        "BOOLEAN" => "INTEGER", // SQLite doesn't have a native boolean type
-        "DATE" => "TEXT",       // Store dates as ISO8601 strings
-        "DATETIME" => "TEXT",   // Store datetimes as ISO8601 strings
-        _ => "TEXT",            // Default to TEXT for unknown types
+        "REAL" => "REAL",
+        "DOUBLE" => "REAL",
+        "DECIMAL" => "REAL",
+        "NUMERIC" => "REAL",
+        "BOOLEAN" => "INTEGER",
+        "BOOL" => "INTEGER",
+        "DATE" => "TEXT",
+        "DATETIME" => "TEXT",
+        "TIMESTAMP" => "TEXT",
+        "TIME" => "TEXT",
+        "BLOB" => "BLOB",
+        "BINARY" => "BLOB",
+        "VARBINARY" => "BLOB",
+        _ => "TEXT",
     }
 }

@@ -1,6 +1,7 @@
 // use actix_nuxt_sql_api::generate_uid;
 use actix_web::{App, HttpResponse, HttpServer, Responder, Result, get, web};
-use bcrypt::{DEFAULT_COST, hash, verify};
+// use bcrypt::{DEFAULT_COST, hash, verify};
+use bcrypt::{DEFAULT_COST, hash};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -100,10 +101,10 @@ fn hash_password(password: &str) -> Result<String, Box<dyn Error>> {
     Ok(hashed)
 }
 // Decrypt & Verify Encrypted Passwword
-fn verify_password(password: &str, hash: &str) -> Result<bool, Box<dyn Error>> {
-    let result = verify(password, hash)?;
-    Ok(result)
-}
+// fn verify_password(password: &str, hash: &str) -> Result<bool, Box<dyn Error>> {
+//     let result = verify(password, hash)?;
+//     Ok(result)
+// }
 
 #[get("/")]
 async fn index() -> Result<impl Responder> {
@@ -117,14 +118,13 @@ async fn index() -> Result<impl Responder> {
 }
 
 async fn user() -> Result<impl Responder> {
-    let result = User {
+    Ok(web::Json(User {
         name: String::from("Name"),
         email: String::from("Email"),
         password: String::from("Password"),
         created_at: Some("04 April 2024, 10:06PM UTC".to_owned()),
         updated_at: Some("04 April 2024, 10:06PM UTC".to_owned()),
-    };
-    Ok(web::Json(result))
+    }))
 }
 
 async fn create_super_user(user: web::Json<User>) -> Result<impl Responder> {
@@ -136,11 +136,10 @@ async fn create_super_user(user: web::Json<User>) -> Result<impl Responder> {
         &[&user.name, &user.email, &hashed_password],
     )
     .unwrap();
-    let result = ApiResponse {
+    Ok(HttpResponse::Ok().json(ApiResponse {
         message: "User created successfully".to_string(),
         status: 201,
-    };
-    Ok(HttpResponse::Ok().json(result))
+    }))
 }
 
 async fn get_super_users() -> Result<impl Responder> {
@@ -192,17 +191,124 @@ struct CollectionFields {
 
 async fn create_collection(data: web::Json<CollectionRequest>) -> Result<impl Responder> {
     let db_name = format!("databases/{}.db", data.collection);
+    if data.collection.is_empty() {
+        return Ok(HttpResponse::BadRequest().json(ApiResponse {
+            message: "Collection name is required".to_string(),
+            status: 409,
+        }));
+    }
     if Path::new(&db_name).exists() {
         return Ok(HttpResponse::BadRequest().json(ApiResponse {
             message: format!("Collection {} already exists!", &data.collection),
             status: 409,
         }));
     }
+    let conn = match Connection::open(&db_name) {
+        Ok(conn) => conn,
+        Err(err) => {
+            return Ok(HttpResponse::InternalServerError().json(ApiResponse {
+                message: format!("Failed to create database: {}", err),
+                status: 500,
+            }));
+        }
+    };
+    let mut create_table_sql = format!(
+        "CREATE TABLE {} (id INTEGER PRIMARY KEY AUTOINCREMENT",
+        data.collection
+    );
+    for field in &data.fields {
+        let mut field_def = format!(
+            ", {} {}",
+            field.title,
+            sql_type_from_field_type(&field.field_type)
+        );
+        if !field.nullable {
+            field_def.push_str(" NOT NULL");
+        }
+        if field.unique {
+            field_def.push_str(" UNIQUE");
+        }
+        if let Some(min) = field.min {
+            if field.field_type == "VARCHAR" || field.field_type == "TEXT" {
+                field_def.push_str(&format!(" CHECK(length({}) >= {})", field.title, min));
+            } else if field.field_type == "INTEGER" || field.field_type == "FLOAT" {
+                field_def.push_str(&format!(" CHECK({} >= {})", field.title, min));
+            }
+        }
+        if let Some(max) = field.max {
+            if field.field_type == "VARCHAR" || field.field_type == "TEXT" {
+                field_def.push_str(&format!(" CHECK(length({}) <= {})", field.title, max));
+            } else if field.field_type == "INTEGER" || field.field_type == "FLOAT" {
+                field_def.push_str(&format!(" CHECK({} <= {})", field.title, max));
+            }
+        }
+        create_table_sql.push_str(&field_def);
+    }
+    create_table_sql.push_str(")");
+    if let Err(err) = conn.execute(&create_table_sql, []) {
+        return Ok(HttpResponse::InternalServerError().json(ApiResponse {
+            message: format!("Failed to create table: {}", err),
+            status: 500,
+        }));
+    }
+    let metadata_table = format!("{}_metadata", data.collection);
+    let create_metadata_sql = format!(
+        "CREATE TABLE {} (
+            field_name TEXT PRIMARY KEY,
+            field_type TEXT NOT NULL,
+            unique_field BOOLEAN NOT NULL,
+            nullable BOOLEAN NOT NULL,
+            min INTEGER,
+            max INTEGER
+        )",
+        metadata_table
+    );
+    if let Err(err) = conn.execute(&create_metadata_sql, []) {
+        return Ok(HttpResponse::InternalServerError().json(ApiResponse {
+            message: format!("Failed to create metadata table: {}", err),
+            status: 500,
+        }));
+    }
+    for field in &data.fields {
+        let insert_metadata_sql = format!(
+            "INSERT INTO {} (field_name, field_type, unique_field, nullable, min, max) 
+             VALUES (?, ?, ?, ?, ?, ?)",
+            metadata_table
+        );
 
-    let conn = Connection::open(&db_name).unwrap();
-
+        if let Err(err) = conn.execute(
+            &insert_metadata_sql,
+            rusqlite::params![
+                field.title,
+                field.field_type,
+                field.unique,
+                field.nullable,
+                field.min,
+                field.max
+            ],
+        ) {
+            return Ok(HttpResponse::InternalServerError().json(ApiResponse {
+                message: format!("Failed to save field metadata: {}", err),
+                status: 500,
+            }));
+        }
+    }
     Ok(HttpResponse::Ok().json(ApiResponse {
         message: format!("Collection {} has been created!", &data.collection),
         status: 201,
     }))
+}
+
+// Helper function to convert field types to SQLite types
+fn sql_type_from_field_type(field_type: &str) -> &str {
+    match field_type {
+        "VARCHAR" => "TEXT",
+        "TEXT" => "TEXT",
+        "INTEGER" => "INTEGER",
+        "FLOAT" => "REAL",
+        "BOOLEAN" => "INTEGER", // SQLite doesn't have a native boolean type
+        "DATE" => "TEXT",       // Store dates as ISO8601 strings
+        "DATETIME" => "TEXT",   // Store datetimes as ISO8601 strings
+        _ => "TEXT",            // Default to TEXT for unknown types
+    }
 }

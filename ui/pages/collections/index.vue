@@ -7,11 +7,13 @@
             </div>
         </div>
         <SideBar v-model="isSidebarOpen">
-            <FormInput v-model="title" placeholder="Collection title" />
-            <div class="py-3 border-t border-gray-200">
-                <FormButton text="+ New Column" class="w-full" />
-            </div>
-            <FormButton text="Create" @click="store" />
+            <form @submit.prevent="store" method="post">
+                <FormInput v-model="title" placeholder="Collection title" required />
+                <div class="py-3 border-t border-gray-200">
+                    <FormButton text="+ New Column" class="w-full" />
+                </div>
+                <FormButton text="Create" type="submit" />
+            </form>
         </SideBar>
     </section>
 </template>
@@ -46,6 +48,7 @@ const fields = ref([
 
 
 async function store() {
+    if (title.value == "") return;
     try {
         const data = await $fetch('/api/create/collection', {
             method: "POST",
@@ -63,7 +66,7 @@ async function store() {
 
 
 function reset() {
-
+    title.value = "";
 }
 
 </script>

@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   css: ['~/assets/css/tailwind.css'],
-
+  modules: ['@nuxt/icon'],
   runtimeConfig: {
     api: process.env.NUXT_API_URL
   },
@@ -29,5 +29,4 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ['@nuxt/icon', '@nuxt/ui']
 })

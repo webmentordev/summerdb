@@ -1,4 +1,6 @@
-Status: Under development, Not working properly
+STATUS: Haulting the Development for time.
+
+<!-- Status: Under development, Not working properly -->
 
 -------------
 Rust (Actix)
